@@ -19,16 +19,34 @@ The `QuizApp` contract allows users to create quizzes, participate in them, and 
 5. Users can check their scores and claim rewards using `checkAndClaim`.
 
 
-## Documentation
+## Documentation of Foundry
 
 https://book.getfoundry.sh/
 
 ## Usage
 
+## Install Openzeppelin Contracts
+```shell
+$ forge install OpenZeppelin/openzeppelin-contracts --no-commit
+```
+
+
 ### Build
 
 ```shell
 $ forge build
+```
+
+### Compile
+
+```shell
+$ forge compile
+```
+
+### Deploy
+
+```shell
+$ forge script script/Deploy.s.sol
 ```
 
 ### Test
