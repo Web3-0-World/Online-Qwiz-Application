@@ -1,13 +1,23 @@
-## Foundry
+## QuizApp Contract
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+The `QuizApp` contract allows users to create quizzes, participate in them, and claim rewards based on their answers.
 
-Foundry consists of:
+### Key Features
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+- **Create Quizzes**: Creators can create quizzes by providing hash id of quiz questions and options store on ipfs/arweave through frontend interaction.
+- **Participate in Quizzes**: Users can participate in quizzes and submit their answers in form of an array.
+- **Manage Quizzes**: Quiz creators can end quizzes and set correct answers.
+- **Claim Rewards**: Users can claim rewards based on the correctness of their answers.
+
+
+### Usage Example
+
+1. Deploy the `QuizApp` contract.
+2. Create a quiz using `createQuiz`.
+3. Users can participate using `participateInQuiz`.
+4. Quiz owners can end the quiz using `endQuiz` and set correct answers with `tellCorrectAnswers`.
+5. Users can check their scores and claim rewards using `checkAndClaim`.
+
 
 ## Documentation
 
@@ -25,42 +35,4 @@ $ forge build
 
 ```shell
 $ forge test
-```
-
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
 ```
