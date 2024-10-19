@@ -1,0 +1,83 @@
+
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+contract QuizPlatform is Ownable {
+    IERC20 public rewardToken; // Token used to reward users
+
+    struct Quiz {
+        string name;
+        uint rewardPerCorrectAnswer; // Tokens rewarded for each correct answer
+        uint totalQuestions;
+        mapping(uint => bool) answers; // Correct answers (true/false)
+        mapping(address => uint) userScores; // Track user scores
+        bool isActive; // Is the quiz still active
+    }
+
+    uint public quizCount = 0; // Total number of quizzes
+    mapping(uint => Quiz) public quizzes; // Store quizzes
+
+    event QuizCreated(uint indexed quizId, string name, uint totalQuestions);
+    event QuizAnswered(address indexed user, uint indexed quizId, uint score, uint reward);
+
+    constructor(IERC20 _rewardToken) {
+        rewardToken = _rewardToken;
+    }
+
+    // Create a new quiz
+    function createQuiz(
+        string memory _name, 
+        uint _rewardPerCorrectAnswer, 
+        uint _totalQuestions, 
+        bool[] memory _answers
+    ) public onlyOwner {
+        require(_totalQuestions == _answers.length, "Answers count mismatch");
+
+        Quiz storage newQuiz = quizzes[quizCount++];
+        newQuiz.name = _name;
+        newQuiz.rewardPerCorrectAnswer = _rewardPerCorrectAnswer;
+        newQuiz.totalQuestions = _totalQuestions;
+        newQuiz.isActive = true;
+
+        for (uint i = 0; i < _totalQuestions; i++) {
+            newQuiz.answers[i] = _answers[i];
+        }
+
+        emit QuizCreated(quizCount - 1, _name, _totalQuestions);
+    }
+
+    // Answer a quiz
+    function answerQuiz(uint _quizId, bool[] memory _answers) public {
+        require(quizzes[_quizId].isActive, "Quiz is not active");
+        require(_answers.length == quizzes[_quizId].totalQuestions, "Answer length mismatch");
+
+        Quiz storage quiz = quizzes[_quizId];
+        uint correctAnswers = 0;
+
+        for (uint i = 0; i < _answers.length; i++) {
+            if (quiz.answers[i] == _answers[i]) {
+                correctAnswers++;
+            }
+        }
+
+        uint score = correctAnswers;
+        uint reward = score * quiz.rewardPerCorrectAnswer;
+
+        quiz.userScores[msg.sender] = score;
+        rewardToken.transfer(msg.sender, reward);
+
+        emit QuizAnswered(msg.sender, _quizId, score, reward);
+    }
+
+    // Deactivate a quiz
+    function deactivateQuiz(uint _quizId) public onlyOwner {
+        quizzes[_quizId].isActive = false;
+    }
+
+    // Withdraw remaining tokens by the owner
+    function withdrawTokens(uint _amount) public onlyOwner {
+        rewardToken.transfer(owner(), _amount);
+    }
+}

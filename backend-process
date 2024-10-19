@@ -1,0 +1,63 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+contract TopicBasedQuizPlatform is Ownable {
+    IERC20 public rewardToken;
+
+    struct Quiz {
+        string ipfsHash; // IPFS hash for quiz data
+        string topic; // Topic of the quiz (e.g., "Blockchain", "Math", "Science")
+        uint rewardPerCorrectAnswer;
+        bool isActive;
+        mapping(address => bool) hasParticipated;
+    }
+
+    uint public quizCount;
+    mapping(uint => Quiz) public quizzes;
+    mapping(string => uint[]) public quizzesByTopic; // Track quizzes by topic
+
+    event QuizCreated(uint indexed quizId, string topic, string ipfsHash);
+    event QuizAnswered(address indexed user, uint indexed quizId, uint score, uint reward);
+
+    constructor(IERC20 _rewardToken) {
+        rewardToken = _rewardToken;
+    }
+
+    // Create a quiz with a specific topic
+    function createQuiz(string memory _ipfsHash, string memory _topic, uint _rewardPerCorrectAnswer) public onlyOwner {
+        Quiz storage newQuiz = quizzes[quizCount++];
+        newQuiz.ipfsHash = _ipfsHash;
+        newQuiz.topic = _topic;
+        newQuiz.rewardPerCorrectAnswer = _rewardPerCorrectAnswer;
+        newQuiz.isActive = true;
+
+        quizzesByTopic[_topic].push(quizCount - 1); // Store the quiz under its topic
+
+        emit QuizCreated(quizCount - 1, _topic, _ipfsHash);
+    }
+
+    // Answer a quiz
+    function answerQuiz(uint _quizId, uint _correctAnswers) public {
+        require(quizzes[_quizId].isActive, "Quiz is not active");
+        require(!quizzes[_quizId].hasParticipated[msg.sender], "Already participated");
+
+        uint reward = _correctAnswers * quizzes[_quizId].rewardPerCorrectAnswer;
+        rewardToken.transfer(msg.sender, reward);
+        quizzes[_quizId].hasParticipated[msg.sender] = true;
+
+        emit QuizAnswered(msg.sender, _quizId, _correctAnswers, reward);
+    }
+
+    // Fetch quizzes by topic
+    function getQuizzesByTopic(string memory _topic) public view returns (uint[] memory) {
+        return quizzesByTopic[_topic];
+    }
+
+    // Deactivate a quiz
+    function deactivateQuiz(uint _quizId) public onlyOwner {
+        quizzes[_quizId].isActive = false;
+    }
+}
